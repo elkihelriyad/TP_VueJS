@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TP2 - Catalogue de livres</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Catalogue de livres</h1>
+            <p>TP2 - Formulaires et événements avec Vue.js 3</p>
+            <p class="compteur">{{ totalLivres }} livre(s) - {{ totalFavoris }} favori(s)</p>
+        </header>
+
+        <main>
+            <section class="panneau">
+                <h2>Ajouter un livre</h2>
+
+                <form @submit.prevent="ajouterLivre">
+                    <label for="titre">Titre *</label>
+                    <input id="titre" type="text" v-model.trim="newBook.title"
+                           placeholder="Ex. : Le Petit Prince">
+
+                    <label for="auteur">Auteur *</label>
+                    <input id="auteur" type="text" v-model.lazy="newBook.author"
+                           placeholder="Ex. : Antoine de Saint-Exupéry">
+
+                    <label for="annee">Année</label>
+                    <input id="annee" type="number" min="0" v-model.number="newBook.year">
+
+                    <label for="genre">Genre</label>
+                    <select id="genre" v-model="newBook.genre">
+                        <option>Roman</option>
+                        <option>Science-fiction</option>
+                        <option>Informatique</option>
+                        <option>Histoire</option>
+                        <option>Autre</option>
+                    </select>
+
+                    <label class="case">
+                        <input type="checkbox" v-model="newBook.isFav">
+                        Ajouter aux favoris
+                    </label>
+
+                    <label for="motCle">Mot-clé</label>
+                    <input id="motCle" type="text" v-model="nouveauMotCle"
+                           @keydown.enter.prevent
+                           @keyup.enter="ajouterMotCle"
+                           placeholder="Écrire un mot et appuyer sur Entrée">
+                    <small>Appuie sur Entrée pour ajouter le mot-clé, sans envoyer le formulaire.</small>
+
+                    <div class="chips">
+                        <span v-for="(mot, index) in newBook.keywords" :key="mot" class="chip">
+                            {{ mot }}
+                            <button type="button" @click="retirerMotCle(index)"
+                                    :aria-label="'Retirer ' + mot">×</button>
+                        </span>
+                    </div>
+
+                    <button class="ajouter" type="submit" :disabled="!formulaireValide">
+                        Ajouter le livre
+                    </button>
+                    <small>* Champs obligatoires</small>
+                </form>
+            </section>
+
+            <section class="panneau liste">
+                <h2>Liste des livres</h2>
+                <p v-if="chargement">Chargement des livres...</p>
+                <p v-else-if="erreur" class="erreur">{{ erreur }}</p>
+
+                <template v-else>
+                    <p v-if="books.length === 0">Le catalogue est vide.</p>
+
+                    <div v-for="book in books" :key="book.id" class="book"
+                         :class="{ favori: book.isFav }"
+                         @click="toggleFavori(book)"
+                         @keydown.enter.prevent="toggleFavori(book)"
+                         role="button" tabindex="0">
+                        <div class="titre-livre">
+                            <h3>{{ book.title }}</h3>
+                            <span v-if="book.isFav" class="etoile">★ Favori</span>
+                            <span v-else class="etoile-vide">☆ Ajouter aux favoris</span>
+                        </div>
+                        <p><strong>Auteur :</strong> {{ book.author }}</p>
+                        <p><strong>Année :</strong> {{ book.year }}</p>
+                        <p><strong>Genre :</strong> {{ book.genre }}</p>
+                        <div class="chips">
+                            <span v-for="mot in book.keywords" :key="mot" class="chip">{{ mot }}</span>
+                        </div>
+
+                        <button type="button" class="supprimer"
+                                @click.stop="supprimerLivre(book)">Supprimer</button>
+                    </div>
+                </template>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

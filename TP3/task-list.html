@@ -1,0 +1,250 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des tâches - Vue 3</title>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6fa;
+            margin: 30px;
+        }
+
+        .conteneur {
+            max-width: 750px;
+            margin: auto;
+        }
+
+        h1 {
+            color: #243249;
+        }
+
+        .filtres {
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 9px 13px;
+            margin-right: 8px;
+            cursor: pointer;
+            border: 1px solid #bcc7d6;
+            border-radius: 6px;
+            background: white;
+        }
+
+        button.actif {
+            background: #2563eb;
+            color: white;
+        }
+
+        .tache {
+            padding: 16px;
+            margin-bottom: 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .terminee {
+            background: #eefaf0;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="app">
+    <task-list></task-list>
+</div>
+
+
+<template id="task-list-template">
+
+    <div class="conteneur">
+
+        <h1>Ma liste de tâches</h1>
+
+        
+        <p>
+            Nombre total de tâches :
+            {{ totalTaches }}
+        </p>
+
+        <!-- Filtres -->
+        <div class="filtres">
+
+            <button
+                v-on:click="filtre = 'toutes'"
+                v-bind:class="{ actif: filtre === 'toutes' }">
+                Toutes
+            </button>
+
+            <button
+                v-on:click="filtre = 'afaire'"
+                v-bind:class="{ actif: filtre === 'afaire' }">
+                À faire
+            </button>
+
+            <button
+                v-on:click="filtre = 'terminees'"
+                v-bind:class="{ actif: filtre === 'terminees' }">
+                Terminées
+            </button>
+
+        </div>
+
+        <p v-if="chargement">
+            Chargement des tâches...
+        </p>
+
+        <p v-else-if="erreur" style="color: red">
+            {{ erreur }}
+        </p>
+
+        <template v-else>
+
+            
+            <div
+                v-for="tache in tachesFiltrees"
+                :key="tache.id"
+                class="tache"
+                v-bind:class="{ terminee: tache.completed }">
+
+                <h3>{{ tache.title }}</h3>
+
+                <p>{{ tache.description }}</p>
+
+                
+                <p v-if="tache.completed">
+                    ✅ Terminée
+                </p>
+
+                <p v-else>
+                    ⏳ À faire
+                </p>
+
+                
+                <button
+                    v-show="!tache.completed"
+                    v-on:click="terminerTache(tache)">
+
+                    Marquer comme terminée
+
+                </button>
+
+            </div>
+
+            <p v-if="tachesFiltrees.length === 0">
+                Aucune tâche à afficher.
+            </p>
+
+        </template>
+
+    </div>
+
+</template>
+
+<script>
+
+const app = Vue.createApp({});
+
+
+app.component('TaskList', {
+
+    template: '#task-list-template',
+
+    data() {
+        return {
+            taches: [],
+            filtre: 'toutes',
+            chargement: true,
+            erreur: ''
+        };
+    },
+
+    
+    computed: {
+
+        
+        totalTaches() {
+            return this.taches.length;
+        },
+
+        
+        tachesFiltrees() {
+
+            if (this.filtre === 'afaire') {
+
+                return this.taches.filter(
+                    tache => !tache.completed
+                );
+
+            }
+
+            if (this.filtre === 'terminees') {
+
+                return this.taches.filter(
+                    tache => tache.completed
+                );
+
+            }
+
+            return this.taches;
+
+        }
+
+    },
+
+  
+    methods: {
+
+        
+        terminerTache(tache) {
+
+            tache.completed = true;
+
+        }
+
+    },
+
+    
+    async mounted() {
+
+        try {
+
+            const reponse = await fetch('./taskList.json');
+
+            if (!reponse.ok) {
+                throw new Error('Fichier JSON introuvable');
+            }
+
+            this.taches = await reponse.json();
+
+        } catch (erreur) {
+
+            this.erreur =
+                'Impossible de charger taskList.json';
+
+            console.error(erreur);
+
+        } finally {
+
+            this.chargement = false;
+
+        }
+
+    }
+
+});
+
+app.mount('#app');
+
+</script>
+
+</body>
+</html>
+

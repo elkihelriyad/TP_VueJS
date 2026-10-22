@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Catalogue de livres</title>
+
+    <!-- Vue.js depuis CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 30px;
+        }
+
+        #app {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .compteur {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .actions {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        button {
+            padding: 8px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #333;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        .book {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        /*
+         * Classe appliquée aux livres favoris.
+         * Elle conserve la bordure et le fond dorés.
+         */
+        .favori {
+            border: 2px solid gold;
+            background-color: #fff8dc;
+        }
+
+        .book h2 {
+            margin-top: 0;
+        }
+
+        .book p {
+            margin: 8px 0;
+        }
+
+        .badge-favori {
+            display: inline-block;
+            background-color: gold;
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .details {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="app">
+
+    <h1>Catalogue de livres</h1>
+    <!-- Compteur de favoris -->
+    <div class="compteur">
+        {{ nombreFavoris }} livre(s) favori(s)
+    </div>
+
+    <!-- Bouton de filtrage -->
+    <div class="actions">
+        <button @click="afficherFavoris = !afficherFavoris">
+            {{ afficherFavoris ? 'Afficher tous les livres' : 'Afficher uniquement les favoris' }}
+        </button>
+    </div>
+
+    <div v-for="book in booksAffiches" :key="book.id">
+        <div class="book" :class="{ favori: book.isFav }">
+            <!-- Badge affiché uniquement si le livre est favori -->
+            <span v-if="book.isFav" class="badge-favori">
+                Favori
+            </span>
+            <h2>{{ book.titre }}</h2>
+
+            <p>
+                <strong>Auteur :</strong>
+                {{ book.auteur }}
+            </p>
+
+            <p>
+                <strong>Année :</strong>
+                {{ book.annee }}
+            </p>
+            <!-- Bouton pour afficher/masquer les détails -->
+            <button @click="book.afficherDetails = !book.afficherDetails">
+                {{ book.afficherDetails ? 'Masquer' : 'Détails' }}
+            </button>
+
+            <!-- v-show conserve l'élément dans le DOM -->
+            <div class="details" v-show="book.afficherDetails">
+                <strong>Genre :</strong>
+                {{ book.genre }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+const app = Vue.createApp({
+
+    data() {
+        return {
+            books: [
+                {
+                    id: 1,
+                    titre: "Le Petit Prince",
+                    auteur: "Antoine de Saint-Exupéry",
+                    annee: 1943,
+                    genre: "Conte philosophique",
+                    isFav: true,
+                    afficherDetails: false
+                },
+                {
+                    id: 2,
+                    titre: "L'Étranger",
+                    auteur: "Albert Camus",
+                    annee: 1942,
+                    genre: "Roman",
+                    isFav: false,
+                    afficherDetails: false
+                },
+                {
+                    id: 3,
+                    titre: "1984",
+                    auteur: "George Orwell",
+                    annee: 1949,
+                    genre: "Dystopie",
+                    isFav: true,
+                    afficherDetails: false
+                },
+                {
+                    id: 4,
+                    titre: "Les Misérables",
+                    auteur: "Victor Hugo",
+                    annee: 1862,
+                    genre: "Roman historique",
+                    isFav: false,
+                    afficherDetails: false
+                },
+                {
+                    id: 5,
+                    titre: "Harry Potter à l'école des sorciers",
+                    auteur: "J. K. Rowling",
+                    annee: 1997,
+                    genre: "Fantasy",
+                    isFav: true,
+                    afficherDetails: false
+                },
+                {
+                    id: 6,
+                    titre: "Le Seigneur des Anneaux",
+                    auteur: "J. R. R. Tolkien",
+                    annee: 1954,
+                    genre: "Fantasy",
+                    isFav: false,
+                    afficherDetails: false
+                }
+            ],
+
+            afficherFavoris: false
+        };
+    },
+
+
+    computed: {
+        nombreFavoris() {
+
+            return this.books.filter(function(book) {
+                return book.isFav;
+            }).length;
+
+        },
+
+        booksAffiches() {
+
+            if (!this.afficherFavoris) {
+                return this.books;
+            }
+
+            return this.books.filter(function(book) {
+                return book.isFav;
+            });
+
+        },
+        booksTriesParAnnee() {
+
+            return [...this.books].sort(function(a, b) {
+                return b.annee - a.annee;
+            });
+
+        }
+
+    }
+
+});
+
+app.mount('#app');
+
+</script>
+
+</body>
+</html>

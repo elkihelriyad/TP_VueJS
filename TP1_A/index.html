@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Budget étudiant</title>
+
+    <!-- Vue.js -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            margin-top: 30px;
+        }
+
+        form {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input,
+        select,
+        button {
+            padding: 10px;
+            font-size: 15px;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .filtres {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .filtres button {
+            background-color: #95a5a6;
+        }
+
+        .filtres button.active {
+            background-color: #3498db;
+        }
+
+        .resume {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            background-color: #ecf0f1;
+        }
+
+        .ok {
+            color: #27ae60;
+        }
+
+        .attention {
+            color: #f39c12;
+        }
+
+        .depasse {
+            color: #e74c3c;
+        }
+
+        .depense {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .depense-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .supprimer {
+            background-color: #e74c3c;
+        }
+
+        .stats {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-ligne {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .message-vide {
+            text-align: center;
+            color: #777;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="app" class="container">
+
+    <h1>Budget étudiant</h1>
+
+    <!-- 1. FORMULAIRE D'AJOUT -->
+
+    <h2>Ajouter une dépense</h2>
+
+    <form @submit.prevent="ajouterDepense">
+
+        <input
+            type="text"
+            v-model="nouvelleDepense.titre"
+            placeholder="Titre de la dépense"
+            required
+        >
+
+        <input
+            type="number"
+            v-model.number="nouvelleDepense.montant"
+            placeholder="Montant"
+            min="0"
+            step="0.01"
+            required
+        >
+
+        <select v-model="nouvelleDepense.categorie">
+            <option value="Alimentation">Alimentation</option>
+            <option value="Transport">Transport</option>
+            <option value="Loisirs">Loisirs</option>
+            <option value="Logement">Logement</option>
+            <option value="Autres">Autres</option>
+        </select>
+
+        <button type="submit">
+            Ajouter la dépense
+        </button>
+
+    </form>
+
+
+    <!-- ============================= -->
+    <!-- 2. FILTRAGE PAR CATEGORIE -->
+    <!-- ============================= -->
+
+    <h2>Filtrer par catégorie</h2>
+
+    <div class="filtres">
+
+        <button
+            @click="selectionnerCategorie('toutes')"
+            :class="{ active: filtreCategorie === 'toutes' }"
+        >
+            Toutes
+        </button>
+
+        <button
+            @click="selectionnerCategorie('Alimentation')"
+            :class="{ active: filtreCategorie === 'Alimentation' }"
+        >
+            Alimentation
+        </button>
+
+        <button
+            @click="selectionnerCategorie('Transport')"
+            :class="{ active: filtreCategorie === 'Transport' }"
+        >
+            Transport
+        </button>
+
+        <button
+            @click="selectionnerCategorie('Loisirs')"
+            :class="{ active: filtreCategorie === 'Loisirs' }"
+        >
+            Loisirs
+        </button>
+
+        <button
+            @click="selectionnerCategorie('Logement')"
+            :class="{ active: filtreCategorie === 'Logement' }"
+        >
+            Logement
+        </button>
+
+        <button
+            @click="selectionnerCategorie('Autres')"
+            :class="{ active: filtreCategorie === 'Autres' }"
+        >
+            Autres
+        </button>
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- 3. RESUME DU BUDGET -->
+    <!-- ============================= -->
+
+    <div class="resume">
+
+        <p>
+            <strong>Budget mensuel :</strong>
+            {{ budgetMensuel.toFixed(2) }} DH
+        </p>
+
+        <p>
+            <strong>Total général :</strong>
+            {{ totalGeneral.toFixed(2) }} DH
+        </p>
+
+        <p>
+            <strong>Total filtré :</strong>
+            {{ totalFiltre.toFixed(2) }} DH
+        </p>
+
+        <p>
+            <strong>Moyenne des dépenses affichées :</strong>
+            {{ moyenneDepense.toFixed(2) }} DH
+        </p>
+
+
+        <!-- Chaîne v-if / v-else-if / v-else -->
+
+        <p
+            v-if="totalGeneral < budgetMensuel * 0.8"
+            class="ok"
+        >
+            Budget OK : vous êtes sous 80 % du budget.
+        </p>
+        <p
+            v-else-if="totalGeneral <= budgetMensuel"
+            class="attention"
+        >
+            Attention : vous avez atteint au moins 80 % du budget.
+        </p>
+        <p
+            v-else
+            class="depasse"
+        >
+            Budget dépassé !
+        </p>
+
+    </div>
+
+    <!-- 5. DETAIL PAR CATEGORIE -->
+    <button @click="afficherStats = !afficherStats">
+        Afficher le détail par catégorie
+    </button>
+
+    <div v-show="afficherStats" class="stats">
+
+        <div
+            v-for="categorie in categories"
+            :key="categorie"
+            class="stat-ligne"
+        >
+            <span>{{ categorie }}</span>
+
+            <strong>
+                {{ totalCategorie(categorie).toFixed(2) }} DH
+            </strong>
+        </div>
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- 6. LISTE DES DEPENSES -->
+    <!-- ============================= -->
+
+    <h2>Liste des dépenses</h2>
+
+    <div v-if="depensesFiltrees.length > 0">
+
+        <div
+            v-for="d in depensesFiltrees"
+            :key="d.id"
+            class="depense"
+        >
+
+            <div class="depense-info">
+
+                <strong>{{ d.titre }}</strong>
+
+                <span>
+                    Catégorie : {{ d.categorie }}
+                </span>
+
+                <span>
+                    Montant : {{ d.montant.toFixed(2) }} DH
+                </span>
+
+            </div>
+
+            <button
+                class="supprimer"
+                @click="supprimerDepense(d)"
+            >
+                Supprimer
+            </button>
+
+        </div>
+
+    </div>
+
+    <div v-else class="message-vide">
+        Aucune dépense à afficher.
+    </div>
+
+</div>
+
+
+<script>
+
+const app = Vue.createApp({
+
+    data() {
+        return {
+
+            // Liste des dépenses
+            depenses: [
+                {
+                    id: 1,
+                    titre: "Déjeuner",
+                    montant: 35,
+                    categorie: "Alimentation"
+                },
+                {
+                    id: 2,
+                    titre: "Bus",
+                    montant: 20,
+                    categorie: "Transport"
+                },
+                {
+                    id: 3,
+                    titre: "Cinéma",
+                    montant: 60,
+                    categorie: "Loisirs"
+                },
+                {
+                    id: 4,
+                    titre: "Courses",
+                    montant: 150,
+                    categorie: "Alimentation"
+                }
+            ],
+
+            // Nouvelle dépense
+            nouvelleDepense: {
+                titre: "",
+                montant: 0,
+                categorie: "Alimentation"
+            },
+
+            // Catégorie actuellement sélectionnée
+            filtreCategorie: "toutes",
+
+            // Budget mensuel
+            budgetMensuel: 1000,
+
+            // Affichage des statistiques
+            afficherStats: false,
+
+            // Liste des catégories
+            categories: [
+                "Alimentation",
+                "Transport",
+                "Loisirs",
+                "Logement",
+                "Autres"
+            ]
+
+        };
+    },
+
+
+    computed: {
+
+        // =============================
+        // 2. DEPENSES FILTREES
+        // =============================
+
+        depensesFiltrees() {
+
+            if (this.filtreCategorie === "toutes") {
+                return this.depenses;
+            }
+
+            return this.depenses.filter(
+                depense => depense.categorie === this.filtreCategorie
+            );
+        },
+
+
+        // =============================
+        // 3. TOTAL FILTRE
+        // =============================
+
+        totalFiltre() {
+
+            return this.depensesFiltrees.reduce(
+                (total, depense) => total + depense.montant,
+                0
+            );
+        },
+
+
+        // =============================
+        // 3. TOTAL GENERAL
+        // =============================
+
+        totalGeneral() {
+
+            return this.depenses.reduce(
+                (total, depense) => total + depense.montant,
+                0
+            );
+        },
+
+
+        // =============================
+        // 3. MOYENNE
+        // =============================
+
+        moyenneDepense() {
+
+            if (this.depensesFiltrees.length === 0) {
+                return 0;
+            }
+
+            return this.totalFiltre / this.depensesFiltrees.length;
+        }
+
+    },
+
+
+    methods: {
+
+        // =============================
+        // 1. AJOUTER UNE DEPENSE
+        // =============================
+
+        ajouterDepense() {
+
+            const nouvelle = {
+                id: Date.now(),
+                titre: this.nouvelleDepense.titre,
+                montant: Number(this.nouvelleDepense.montant),
+                categorie: this.nouvelleDepense.categorie
+            };
+
+            this.depenses.push(nouvelle);
+
+            // Réinitialiser le formulaire
+            this.nouvelleDepense = {
+                titre: "",
+                montant: 0,
+                categorie: "Alimentation"
+            };
+        },
+
+        // 2. SELECTIONNER UNE CATEGORIE
+
+        selectionnerCategorie(cat) {
+
+            this.filtreCategorie = cat;
+        },
+
+
+        // 5. TOTAL PAR CATEGORIE
+
+        totalCategorie(cat) {
+
+            return this.depenses
+                .filter(depense => depense.categorie === cat)
+                .reduce(
+                    (total, depense) => total + depense.montant,
+                    0
+                );
+        },
+
+        // 6. SUPPRIMER UNE DEPENSE
+
+        supprimerDepense(depense) {
+
+            this.depenses = this.depenses.filter(
+                d => d.id !== depense.id
+            );
+        }
+
+    }
+
+});
+
+app.mount("#app");
+
+</script>
+
+</body>
+</html>

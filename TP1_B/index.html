@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Stock de l'association</title>
+
+    <!-- Vue.js -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            width: 850px;
+            max-width: 90%;
+            margin: 30px auto;
+            padding: 25px;
+            background-color: white;
+            border-radius: 8px;
+        }
+
+        section {
+            margin-bottom: 30px;
+        }
+
+        input,
+        select {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        button {
+            padding: 8px 12px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        .article {
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .article h3 {
+            margin-top: 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .rupture {
+            background-color: #ffcccc;
+        }
+
+        .faible {
+            background-color: #fff0b3;
+        }
+
+        .ok {
+            background-color: #ccffcc;
+        }
+
+        .detail {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="app" class="container">
+
+    <h1>Stock de l'association</h1>
+
+
+    <!-- Recherche et filtre -->
+    <section>
+
+        <h2>Recherche et filtre</h2>
+
+        <input
+            type="text"
+            v-model="rechercheTexte"
+            placeholder="Rechercher un article"
+        >
+
+        <select v-model="filtreCategorie">
+
+            <option value="toutes">
+                Toutes les catégories
+            </option>
+
+            <option value="Boissons">
+                Boissons
+            </option>
+
+            <option value="Snacks">
+                Snacks
+            </option>
+
+            <option value="Repas">
+                Repas
+            </option>
+
+            <option value="Autre">
+                Autre
+            </option>
+
+        </select>
+
+    </section>
+
+
+    <!-- Résumé global -->
+    <section>
+
+        <h2>Résumé du stock</h2>
+
+        <p>
+            Valeur totale du stock :
+            <strong>
+                {{ valeurTotaleStock.toFixed(2) }} €
+            </strong>
+        </p>
+
+        <p>
+            Nombre d'articles en rupture :
+            <strong>
+                {{ nombreRupture }}
+            </strong>
+        </p>
+
+    </section>
+
+
+    <!-- Ajouter un article -->
+    <section>
+
+        <h2>Ajouter un article</h2>
+
+        <form @submit.prevent="ajouterArticle">
+
+            <input
+                type="text"
+                v-model="nouvelArticle.nom"
+                placeholder="Nom"
+            >
+
+            <input
+                type="number"
+                v-model.number="nouvelArticle.quantite"
+                placeholder="Quantité"
+            >
+
+            <input
+                type="number"
+                v-model.number="nouvelArticle.prixUnitaire"
+                placeholder="Prix unitaire"
+            >
+
+            <input
+                type="number"
+                v-model.number="nouvelArticle.seuilAlerte"
+                placeholder="Seuil d'alerte"
+            >
+
+            <select v-model="nouvelArticle.categorie">
+
+                <option value="Boissons">
+                    Boissons
+                </option>
+
+                <option value="Snacks">
+                    Snacks
+                </option>
+
+                <option value="Repas">
+                    Repas
+                </option>
+
+                <option value="Autre">
+                    Autre
+                </option>
+
+            </select>
+
+            <button type="submit">
+                Ajouter
+            </button>
+
+        </form>
+
+    </section>
+
+
+    <!-- Liste des articles -->
+    <section>
+
+        <h2>Liste des articles</h2>
+
+        <div v-if="articlesFiltres.length > 0">
+
+            <div
+                v-for="article in articlesFiltres"
+                :key="article.id"
+                class="article"
+            >
+
+                <h3>
+                    {{ article.nom }}
+                </h3>
+
+                <p>
+                    Catégorie :
+                    {{ article.categorie }}
+                </p>
+
+                <p>
+                    Quantité :
+                    {{ article.quantite }}
+                </p>
+
+                <p>
+                    Prix unitaire :
+                    {{ article.prixUnitaire.toFixed(2) }} €
+                </p>
+
+
+                <!-- État du stock -->
+
+                <span
+                    v-if="article.quantite === 0"
+                    class="badge rupture"
+                >
+                    Rupture
+                </span>
+
+                <span
+                    v-else-if="article.quantite <= article.seuilAlerte"
+                    class="badge faible"
+                >
+                    Stock faible
+                </span>
+
+                <span
+                    v-else
+                    class="badge ok"
+                >
+                    Ok
+                </span>
+
+
+                <br>
+
+
+                <!-- Ajustement de quantité -->
+
+                <button @click="decrementer(article)">
+                    -
+                </button>
+
+                <strong>
+                    {{ article.quantite }}
+                </strong>
+
+                <button @click="incrementer(article)">
+                    +
+                </button>
+
+
+                <br>
+
+
+                <!-- Détail -->
+
+                <button @click="toggleDetail(article)">
+                    Détail
+                </button>
+
+
+                <!-- Suppression -->
+
+                <button @click="supprimerArticle(article)">
+                    Supprimer
+                </button>
+
+
+                <!-- Panneau de détail -->
+
+                <div
+                    v-show="articleDetail === article"
+                    class="detail"
+                >
+
+                    <p>
+                        Nom :
+                        {{ article.nom }}
+                    </p>
+
+                    <p>
+                        Catégorie :
+                        {{ article.categorie }}
+                    </p>
+
+                    <p>
+                        Quantité :
+                        {{ article.quantite }}
+                    </p>
+
+                    <p>
+                        Prix unitaire :
+                        {{ article.prixUnitaire.toFixed(2) }} €
+                    </p>
+
+                    <p>
+                        Seuil d'alerte :
+                        {{ article.seuilAlerte }}
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <p v-else>
+            Aucun article trouvé.
+        </p>
+
+    </section>
+
+</div>
+
+
+<script>
+
+const app = Vue.createApp({
+
+    data() {
+
+        return {
+
+            rechercheTexte: '',
+
+            filtreCategorie: 'toutes',
+
+            articleDetail: null,
+
+
+            articles: [
+
+                {
+                    id: 1,
+                    nom: 'Eau',
+                    categorie: 'Boissons',
+                    quantite: 20,
+                    prixUnitaire: 1,
+                    seuilAlerte: 5
+                },
+
+                {
+                    id: 2,
+                    nom: 'Jus',
+                    categorie: 'Boissons',
+                    quantite: 4,
+                    prixUnitaire: 2,
+                    seuilAlerte: 5
+                },
+
+                {
+                    id: 3,
+                    nom: 'Chips',
+                    categorie: 'Snacks',
+                    quantite: 0,
+                    prixUnitaire: 1.5,
+                    seuilAlerte: 5
+                },
+
+                {
+                    id: 4,
+                    nom: 'Sandwich',
+                    categorie: 'Repas',
+                    quantite: 10,
+                    prixUnitaire: 4,
+                    seuilAlerte: 3
+                }
+
+            ],
+
+
+            nouvelArticle: {
+
+                nom: '',
+                categorie: 'Boissons',
+                quantite: 0,
+                prixUnitaire: 0,
+                seuilAlerte: 5
+
+            }
+
+        }
+
+    },
+
+
+    computed: {
+
+
+        // Recherche + filtre par catégorie
+
+        articlesFiltres() {
+
+            return this.articles.filter(article => {
+
+                const correspondRecherche =
+                    article.nom
+                        .toLowerCase()
+                        .includes(
+                            this.rechercheTexte.toLowerCase()
+                        )
+
+
+                const correspondCategorie =
+                    this.filtreCategorie === 'toutes' ||
+                    article.categorie === this.filtreCategorie
+
+
+                return correspondRecherche &&
+                       correspondCategorie
+
+            })
+
+        },
+
+
+        // Valeur totale du stock
+
+        valeurTotaleStock() {
+
+            return this.articles.reduce(
+
+                (total, article) =>
+                    total +
+                    article.quantite *
+                    article.prixUnitaire,
+
+                0
+
+            )
+
+        },
+
+
+        // Nombre d'articles en rupture
+
+        nombreRupture() {
+
+            return this.articles.filter(
+
+                article =>
+                    article.quantite === 0
+
+            ).length
+
+        }
+
+    },
+
+
+    methods: {
+
+
+        // Augmenter la quantité
+
+        incrementer(article) {
+
+            article.quantite++
+
+        },
+
+
+        // Diminuer la quantité
+
+        decrementer(article) {
+
+            if (article.quantite > 0) {
+
+                article.quantite--
+
+            }
+
+        },
+
+
+        // Afficher / cacher le détail
+
+        toggleDetail(article) {
+
+            if (this.articleDetail === article) {
+
+                this.articleDetail = null
+
+            } else {
+
+                this.articleDetail = article
+
+            }
+
+        },
+
+
+        // Supprimer un article
+
+        supprimerArticle(article) {
+
+            this.articles = this.articles.filter(
+
+                a => a.id !== article.id
+
+            )
+
+
+            if (this.articleDetail === article) {
+
+                this.articleDetail = null
+
+            }
+
+        },
+
+
+        // Ajouter un article
+
+        ajouterArticle() {
+
+            if (
+                this.nouvelArticle.nom === '' ||
+                this.nouvelArticle.quantite < 0 ||
+                this.nouvelArticle.prixUnitaire < 0
+            ) {
+
+                return
+
+            }
+
+
+            const article = {
+
+                id: Date.now(),
+
+                nom: this.nouvelArticle.nom,
+
+                categorie:
+                    this.nouvelArticle.categorie,
+
+                quantite:
+                    Number(this.nouvelArticle.quantite),
+
+                prixUnitaire:
+                    Number(this.nouvelArticle.prixUnitaire),
+
+                seuilAlerte:
+                    Number(this.nouvelArticle.seuilAlerte)
+
+            }
+
+
+            this.articles.push(article)
+
+
+            this.nouvelArticle = {
+
+                nom: '',
+
+                categorie: 'Boissons',
+
+                quantite: 0,
+
+                prixUnitaire: 0,
+
+                seuilAlerte: 5
+
+            }
+
+        }
+
+    }
+
+})
+
+
+app.mount('#app')
+
+</script>
+
+</body>
+
+</html>

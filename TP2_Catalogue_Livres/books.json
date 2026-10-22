@@ -1,0 +1,38 @@
+[
+    {
+        "id": 1,
+        "title": "Le Petit Prince",
+        "author": "Antoine de Saint-Exupéry",
+        "year": 1943,
+        "genre": "Roman",
+        "isFav": true,
+        "keywords": ["amitié", "voyage"]
+    },
+    {
+        "id": 2,
+        "title": "1984",
+        "author": "George Orwell",
+        "year": 1949,
+        "genre": "Science-fiction",
+        "isFav": false,
+        "keywords": ["dystopie", "politique"]
+    },
+    {
+        "id": 3,
+        "title": "Clean Code",
+        "author": "Robert C. Martin",
+        "year": 2008,
+        "genre": "Informatique",
+        "isFav": true,
+        "keywords": ["programmation", "qualité"]
+    },
+    {
+        "id": 4,
+        "title": "L'Étranger",
+        "author": "Albert Camus",
+        "year": 1942,
+        "genre": "Roman",
+        "isFav": false,
+        "keywords": ["philosophie"]
+    }
+]

@@ -1,0 +1,93 @@
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 24px;
+    background: #f4f6fb;
+    color: #24314b;
+    font-family: Arial, sans-serif;
+}
+
+#app { max-width: 1100px; margin: auto; }
+
+header { margin-bottom: 24px; }
+header h1 { margin-bottom: 6px; }
+header p { color: #61708a; }
+.compteur { font-weight: bold; }
+
+main {
+    display: grid;
+    grid-template-columns: minmax(280px, 370px) 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.panneau {
+    background: white;
+    border: 1px solid #dde4f0;
+    border-radius: 12px;
+    padding: 22px;
+}
+
+h2 { margin-top: 0; font-size: 1.25rem; }
+form { display: flex; flex-direction: column; gap: 10px; }
+label { font-weight: bold; font-size: 0.94rem; }
+
+input:not([type="checkbox"]), select {
+    padding: 10px;
+    width: 100%;
+    border: 1px solid #bac7dc;
+    border-radius: 7px;
+    font: inherit;
+}
+
+.case { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
+.case input { width: auto; }
+small { color: #69778e; line-height: 1.4; }
+
+button {
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font: inherit;
+}
+
+.ajouter { padding: 12px; background: #2563eb; color: white; font-weight: bold; }
+.ajouter:disabled { background: #9ca9bd; cursor: not-allowed; }
+
+.book {
+    border: 1px solid #dce3ef;
+    border-radius: 10px;
+    padding: 17px;
+    margin-top: 15px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.book:hover { background: #f9fbff; }
+.book.favori { border-color: #f0bd5c; background: #fff9eb; }
+.book.favori:hover { background: #fff4d9; }
+.book p { margin: 8px 0; }
+
+.titre-livre { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.titre-livre h3 { margin: 0; }
+.etoile { color: #ad7100; font-weight: bold; }
+.etoile-vide { color: #69778e; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+    background: #e4edff;
+    color: #1b4d9a;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+.chip button { margin-left: 5px; padding: 0 3px; background: transparent; color: inherit; }
+
+.supprimer { margin-top: 14px; padding: 8px 12px; background: #fee2e2; color: #a52121; }
+.erreur { color: #b42318; }
+
+@media (max-width: 750px) {
+    body { padding: 12px; }
+    main { grid-template-columns: 1fr; }
+}
